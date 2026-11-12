@@ -5,7 +5,7 @@ REPO="$(cd "$(dirname "$0")/.." && pwd)"
 VER="${1:-2}"
 cd "$REPO"
 for f in tests/connect_test.cpp tests/move_test.cpp tests/joint_test.cpp \
-         a0509_menu/a0509_menu.cpp gripper/gripper_test.cpp gripper/gripper_scan.cpp; do
+         a0509_menu/a0509_menu.cpp; do
   ./build.sh "$f" "$VER"
 done
 cmake -S a0509_gui -B a0509_gui/build -DDRCF_VERSION="$VER" ${DRFL_ROOT:+-DDRFL_ROOT="$DRFL_ROOT"} >/dev/null

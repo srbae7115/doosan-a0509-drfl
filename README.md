@@ -1,7 +1,7 @@
 # doosan-a0509-drfl
 
 두산로보틱스 **A0509** 실물 로봇을 **ROS 없이** 공식 [API-DRFL](https://github.com/DoosanRobotics/API-DRFL)(C++)로 제어하는 예제 모음입니다.
-Ubuntu 22.04 PC에서 테스트 프로그램, CLI 조그 메뉴, Qt GUI, Robotiq 2F-85 그리퍼 테스트를 제공합니다.
+Ubuntu 22.04 PC에서 테스트 프로그램, CLI 조그 메뉴, Qt GUI를 제공합니다.
 
 > ⚠️ **안전**: 실물 로봇을 움직이는 코드입니다. 항상 티치펜던트의 **비상정지 버튼을 손에 들고** 실행하세요.
 > 프로그램의 소프트웨어 정지는 통신이 살아 있을 때만 동작하며 비상정지를 대체하지 않습니다.
@@ -26,8 +26,6 @@ Ubuntu 22.04 PC에서 테스트 프로그램, CLI 조그 메뉴, Qt GUI, Robotiq
 | `a0509_menu/a0509_menu.cpp` | CLI 조그 메뉴 (1 연결 → 2 제어권 → 3 준비 → 관절 조작) | ✅ 실기 확인 |
 | `a0509_gui/` | Qt5 조그 GUI (CMake) — 관절 조그 | ✅ 실기 확인 |
 | `a0509_gui/` (MoveJ / MoveL / 직교 조그) | MoveJ, X/Y/Z + Roll/Pitch/Yaw 직선 이동 (절대 / 상대(base) / 상대(tool)), 직교·관절 ± 조그 | ✅ 실기 확인 |
-| `gripper/gripper_test.cpp` | Robotiq 2F-85 (플랜지 RS-485, Modbus RTU) 활성화/열기/닫기 | ❌ 미지원 (구형 플랜지 GC110000, 응답 없음) |
-| `gripper/gripper_scan.cpp` | 그리퍼 통신 진단 (port/baud/slave 스캔, 상태 읽기만) | ⚠️ 미검증 |
 
 ## 설치
 
@@ -126,15 +124,6 @@ scripts/build_all.sh 2         # 전체 빌드 (컨트롤러 3.x면 3)
   `amovel(posx, ABS, BASE)`로 보냅니다. 상태 줄에 RPY와 TP 표시값(ZYZ)을 함께 보여 줍니다.
 - 처음에는 **짧은 상대 이동(5~10 mm)**과 낮은 속도로 방향을 확인하세요. TP의 TCP(툴) 설정이 바뀌면 같은 관절 자세에서도 TCP 값이 달라집니다.
 - 변환 계산은 로봇 없이 `a0509_gui/build/pose_math_test`로 검사합니다 (`scripts/build_all.sh`가 빌드 후 자동 실행).
-
-### 그리퍼 (Robotiq 2F-85, 미검증)
-
-```bash
-./gripper/gripper_scan --force   # 통신 진단: 상태 읽기 프레임만 전송
-./gripper/gripper_test --force   # a=활성화 o=열기 c=닫기 p=위치 s=상태
-```
-
-로봇 팔은 Servo ON/이동하지 않습니다. 활성화(`a`) 시 그리퍼가 스스로 완전히 열고 닫으니 손가락 사이를 비우세요.
 
 ## 알려진 문제 / 주의 사항
 
