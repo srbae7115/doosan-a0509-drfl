@@ -25,8 +25,8 @@ Ubuntu 22.04 PC에서 테스트 프로그램, CLI 조그 메뉴, Qt GUI, Robotiq
 | `tests/joint_test.cpp` | J1~J6를 하나씩 +5° 왕복 (관절마다 Enter 확인, 2°/s) | ✅ 실기 확인 |
 | `a0509_menu/a0509_menu.cpp` | CLI 조그 메뉴 (1 연결 → 2 제어권 → 3 준비 → 관절 조작) | ✅ 실기 확인 |
 | `a0509_gui/` | Qt5 조그 GUI (CMake) — 관절 조그 | ✅ 실기 확인 |
-| `a0509_gui/` (MoveL 패널) | X/Y/Z + Roll/Pitch/Yaw 직선 이동 (절대 / 상대(base) / 상대(tool)) | ⚠️ 이동 실기 미검증 (ZYZ 규약은 실기 회전행렬로 확인) |
-| `gripper/gripper_test.cpp` | Robotiq 2F-85 (플랜지 RS-485, Modbus RTU) 활성화/열기/닫기 | ⚠️ 미검증 (그리퍼 응답 없음 조사 중) |
+| `a0509_gui/` (MoveJ / MoveL / 직교 조그) | MoveJ, X/Y/Z + Roll/Pitch/Yaw 직선 이동 (절대 / 상대(base) / 상대(tool)), 직교·관절 ± 조그 | ✅ 실기 확인 |
+| `gripper/gripper_test.cpp` | Robotiq 2F-85 (플랜지 RS-485, Modbus RTU) 활성화/열기/닫기 | ❌ 미지원 (구형 플랜지 GC110000, 응답 없음) |
 | `gripper/gripper_scan.cpp` | 그리퍼 통신 진단 (port/baud/slave 스캔, 상태 읽기만) | ⚠️ 미검증 |
 
 ## 설치

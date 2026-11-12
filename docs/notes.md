@@ -52,18 +52,21 @@ v2.8에서 MoveIt을 쓰려면 A0509 URDF/MoveIt 설정만 사용하고, `Follow
 
 DRFL만으로도 `movel`, `movejx`, `movec`, `movesj`, `movesx`, `moveb`, `ikin`/`fkin` 등을 사용할 수 있습니다 (v2.8 지원 여부는 개별 확인 필요).
 
-## 9. Robotiq 2F-85 (플랜지 RS-485) — 조사 중
+## 9. Robotiq 2F-85 (플랜지 RS-485) — 중단
 
 - `flange_serial_open(1, 115200)` 성공, 상태 읽기 프레임 `09 03 07 D0 00 03 04 0E` 송신 성공, **응답 없음**
 - 확인할 것: 그리퍼 LED, TP의 플랜지 툴 전원(24V) 설정, TP Robotiq 플러그인이 버스를 점유하는지, A0509 플랜지/v2.8의 플랜지 시리얼 지원 여부
 - `gripper/gripper_scan`으로 port/baud/slave 조합 진단
+- 2026-11-12: 플랜지 보드 `GC110000` = 구형 플랜지 (`IS_NEW_FLANGE_VERSION` 거짓). `flange_serial_*`은 존재하지 않는 포트 0/2에서도 성공을 반환하지만
+  모든 port/baud/slave 조합에서 수신 0바이트 → 구형 플랜지에서는 RS-485 통신 불가로 판단하고 중단.
+  대안: 그리퍼를 USB-RS485 변환기 + 24V 전원으로 PC에 직접 연결.
 
 ## 10. TCP 값 변화
 
 관절은 거의 그대로인데 TCP Z가 284 → 448 mm로 바뀐 적이 있음 → TP의 TCP(툴) 설정 변경으로 추정.
 `movel` 등 좌표 기반 모션 전에 TP에서 TCP 설정을 확인하세요.
 
-## 11. GUI MoveL: RPY ↔ ZYZ
+## 11. GUI MoveL: RPY ↔ ZYZ (실기 확인)
 
 - 두산 posx의 자세는 **ZYZ 오일러** `R = Rz(A)·Ry(B)·Rz(C)` [deg]. GUI 입력은 **RPY** `R = Rz(yaw)·Ry(pitch)·Rx(roll)`.
 - 툴이 아래를 보는 일반 작업 자세는 **B = 180°로 ZYZ 특이 자세**입니다. 이때는 A−C만 의미가 있어 A, C 분할이 임의이므로
@@ -77,3 +80,4 @@ DRFL만으로도 `movel`, `movejx`, `movec`, `movesj`, `movesx`, `moveb`, `ikin`
   예: posx `[366.71, 12.78, 440.32 | 1.413, -179.971, -0.169]` → RPY `[180.000, -0.029, -178.419]`.
   컨트롤러는 B를 음수(-179.97)로 보고할 수 있습니다. GUI는 같은 회전을 B∈[0,180]로 보내므로 A, C 숫자가 TP 표시와 180° 다를 수 있습니다 (같은 자세).
 - 이 로봇은 TCP(툴) 오프셋이 설정돼 있지 않아 tool posx = flange posx입니다. MoveL Z는 플랜지 면 기준이고 2F-85 손가락은 약 150 mm 아래에 있습니다.
+- 2026-11-12 실기 확인: 직교 조그(Base/Tool), MoveL, 정지(Space) 정상 동작.
