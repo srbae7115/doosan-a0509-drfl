@@ -35,6 +35,8 @@
 #include <QProgressBar>
 #include <QPushButton>
 #include <QRadioButton>
+#include <QScreen>
+#include <QScrollArea>
 #include <QShortcut>
 #include <QSlider>
 #include <QTimer>
@@ -149,7 +151,13 @@ class MainWindow : public QWidget {
 public:
     MainWindow() {
         setWindowTitle("A0509 MoveJ / MoveL (DRFL)");
-        auto* root = new QGridLayout(this);
+        // Fixed top (connection) and bottom (progress, STOP, log); the panels in between scroll when the
+        // screen is too short, so the STOP button is always visible.
+        auto* outer = new QVBoxLayout(this);
+        outer->setSpacing(4);
+        auto* content = new QWidget;
+        auto* root = new QGridLayout(content);
+        root->setContentsMargins(0, 0, 0, 0);
         root->setVerticalSpacing(4);
         QFont mono("Monospace");
         mono.setStyleHint(QFont::TypeWriter);
@@ -165,7 +173,7 @@ public:
         connectBtn_ = makeButton("연결");
         connRow->addWidget(connectBtn_);
         connRow->addStretch();
-        root->addLayout(connRow, 0, 0, 1, 2);
+        outer->addLayout(connRow);
 
         // ---------- 현재 상태 ----------
         auto* st = new QGroupBox("현재 상태");
@@ -196,14 +204,23 @@ public:
         pw->addWidget(zyzLbl_);
         pw->addStretch();
         sg->addLayout(pw, 4, 0, 1, 6);
-        root->addWidget(st, 1, 0, 1, 2);
+        root->addWidget(st, 0, 0, 1, 2);
 
         // ---------- MoveJ | MoveL ----------
-        root->addWidget(buildMoveJBox(), 2, 0);
-        root->addWidget(buildMoveLBox(), 2, 1);
+        root->addWidget(buildMoveJBox(), 1, 0);
+        root->addWidget(buildMoveLBox(), 1, 1);
 
         // ---------- 조그 ----------
-        root->addWidget(buildJogBox(), 3, 0, 1, 2);
+        root->addWidget(buildJogBox(), 2, 0, 1, 2);
+        root->setColumnStretch(0, 1);
+        root->setColumnStretch(1, 1);
+        root->setRowStretch(3, 1);
+        auto* scroll = new QScrollArea;
+        scroll->setWidget(content);
+        scroll->setWidgetResizable(true);
+        scroll->setFrameShape(QFrame::NoFrame);
+        scroll->setFocusPolicy(Qt::NoFocus);
+        outer->addWidget(scroll, 1);
 
         // ---------- 동작 진행 ----------
         auto* fp = new QGroupBox("동작 진행");
@@ -220,7 +237,7 @@ public:
         fl->addWidget(mvState_);
         fl->addWidget(mvBar_);
         fl->addWidget(mvInfo_, 1);
-        root->addWidget(fp, 4, 0, 1, 2);
+        outer->addWidget(fp);
         mvShow("대기", C_IDLE, 0, "");
 
         // ---------- 하단 ----------
@@ -248,18 +265,15 @@ public:
         fc->addStretch();
         helpBtn_ = makeButton("❓ 도움말 (F1)");
         fc->addWidget(helpBtn_);
-        root->addLayout(fc, 5, 0, 1, 2);
+        outer->addLayout(fc);
 
         log_ = new QPlainTextEdit;
         log_->setReadOnly(true);
         log_->setMaximumBlockCount(500);
         log_->setFocusPolicy(Qt::NoFocus);
         log_->setFont(mono);
-        log_->setMinimumHeight(70);
-        root->addWidget(log_, 6, 0, 1, 2);
-        root->setColumnStretch(0, 1);
-        root->setColumnStretch(1, 1);
-        root->setRowStretch(6, 1);
+        log_->setFixedHeight(110);  // the motion panels get the remaining height first
+        outer->addWidget(log_);
 
         QObject::connect(connectBtn_, &QPushButton::clicked, [this] { robot_ ? disconnectRobot() : connectRobot(); });
         QObject::connect(servoBtn_, &QPushButton::clicked, [this] { beginServo(); });
@@ -281,7 +295,7 @@ public:
         QObject::connect(&timer_, &QTimer::timeout, [this] { tick(); });
         timer_.start(100);
         refreshUi();
-        resize(1180, 1050);
+        fitToScreen(content);
     }
     ~MainWindow() override { QCoreApplication::instance()->removeEventFilter(this); }
 
@@ -311,6 +325,17 @@ protected:
 private:
     enum class Phase { Off, WaitAccess, WaitServo, Ready, Moving };
     enum class MoveKind { Joint, Linear };
+
+    // Full size (no scrolling) when it fits; otherwise as tall as the work area allows. A margin is kept
+    // because some desktops (Windows taskbar under WSLg) are not excluded from availableGeometry().
+    void fitToScreen(QWidget* content) {
+        const QScreen* scr = QGuiApplication::primaryScreen();
+        const QRect av = scr ? scr->availableGeometry() : QRect(0, 0, 1280, 1000);
+        const int wantW = std::max(1180, content->sizeHint().width() + 40);
+        const int wantH = content->sizeHint().height() + 300;  // + connection row, progress, STOP bar, log
+        resize(std::min(wantW, av.width() - 20), std::min(wantH, av.height() - 90));
+        move(av.left() + std::max(0, (av.width() - width()) / 2), av.top() + 10);
+    }
 
     // ---------- widget helpers ----------
     QPushButton* makeButton(const QString& text) {
